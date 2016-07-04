@@ -75,6 +75,9 @@ object Usher{
   def OPTIONS(r: Route): Middleware = ifMatches(HttpMethod.Options, r)
   def ANY(r: Route): Middleware = ifRoute(r)
 
+  /** Helper for very simple 404 pages */
+  def notFound(msg: String): Handler = handler { req => Response(status = 404, body = msg) }
+
   def context(r: Route): Middleware = ifRoute(r)
 
   // Feature request from the marketing dept.
