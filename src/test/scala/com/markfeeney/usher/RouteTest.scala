@@ -1,6 +1,6 @@
 package com.markfeeney.usher
 
-import com.markfeeney.usher.Route.ParamValue
+import scala.language.implicitConversions
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.scalatest.FunSuite
 
@@ -44,7 +44,8 @@ class RouteTest extends FunSuite {
 
   test("extracting param values") {
     def t(path: String, url: String) = Route.parse(Route.compile(path), url)
-    def m(pairs: (String, ParamValue)*) = Some(Map(pairs: _*)) // allows ParamValue implicits to work below
+    def m(pairs: (String, Vector[String])*) = Some(Map(pairs: _*)) // allows ParamValue implicits to work below
+    implicit def doNotDoThis(s: String): Vector[String] = Vector(s) // TODO: shim while I refactor (he claims)
 
     assert(t("/", "/").contains(Map.empty))
     assert(t("/foo", "/foo").contains(Map.empty))

@@ -38,7 +38,7 @@ class UsherTest extends FunSuite {
     val r3: Handler = h("/heynow", "hi3")
     def notFound(reason: String) = handler(Response(status = 404, body = reason))
 
-    val composed: Handler = Usher.firstOf(r1, r2, r3, notFound("Computer said no."))
+    val composed: Handler = Usher.routes(r1, r2, r3, notFound("Computer said no."))
 
     def t(url: String): String = {
       extractResponse(composed(Request.mock(url))) match {
@@ -56,8 +56,10 @@ class UsherTest extends FunSuite {
 
   test("typical route matching") {
     val h: Handler = Simple.GET("/foo/:id") { req =>
-      val body: String = Route.get(req).get.params("id").value
-      Response(body = s"id was $body")
+      for {
+        params <- Usher.get(req)
+        id <- params.getInt("id")
+      } yield Response(body = f"id was $id%d")
     }
 
     h(Request.mock(HM.Get, "/foo/42"))(assertResp { resp =>

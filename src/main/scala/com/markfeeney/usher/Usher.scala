@@ -2,20 +2,47 @@ package com.markfeeney.usher
 
 import com.markfeeney.circlet.Circlet.handler
 import com.markfeeney.circlet._
-import com.markfeeney.usher.Route.{ParamValue, Params}
+
+import scala.util.Try
 
 object Usher{
+
+  case class Params(params: Map[String, Vector[String]]) {
+    /**
+     * Helper to get first element from value named `paramNam`.
+     */
+    def getStr(paramName: String): Option[String] = {
+      params.get(paramName).flatMap(_.headOption)
+    }
+
+    /**
+     * Helper to get first element from value named `paramNam` as an Int.
+     */
+    def getInt(paramName: String): Option[Int] = {
+      getStr(paramName).flatMap(x => Try(x.toInt).toOption)
+    }
+ }
+
+  /** Return parsed route params stored on `req`, if any. */
+  def get(req: Request): Option[Params] = {
+    Try(req.attrs("routeParams").asInstanceOf[Params]).toOption
+  }
+
+  /** Set `params` to be the route params on `req`. */
+  def set(req: Request, params: Params): Request = {
+    req.updated("routeParams", params)
+  }
 
   /**
    * Merge `incoming` route params into any existing route params that may
    * already be on `req`.
    */
-  private def mergeParams(req: Request, incoming: Map[String, ParamValue]): Request = {
-    val merged: Option[Params] = Route.get(req).map { prev =>
-      prev.copy(params = prev.params ++ incoming)
+  private def mergeParams(req: Request, incoming: Map[String, Vector[String]]): Request = {
+    val params: Params = get(req) match {
+      case Some(prev) => prev.copy(params = prev.params ++ incoming)
+      case _ => Params(incoming)
     }
-    val params = merged.getOrElse(Params(incoming))
-    Route.set(req, params)
+    set(req, params)
   }
 
   /**
@@ -51,7 +78,7 @@ object Usher{
 
   /**
    * Return a handler that tries calling `candidate`, but falls back to
-   * `fallback` if the former returns no resposne.
+   * `fallback` if the former returns no response.
    */
   private def tryHandler(candidate: Handler, fallback: Handler): Handler = req => k => {
     candidate(req) {
@@ -63,9 +90,9 @@ object Usher{
   /**
    * Sequentially try each handler in `hs` until one returns a response.  If
    * none of the `hs` return a response, the returned handler won't either.
+   * Used to be called `firstOf`, but marketing demanded a rename.
    */
-  // TODO: Not loving this name. This operation must have a common name?
-  def firstOf(hs: Handler*): Handler = hs.reduceLeft(tryHandler)
+  def routes(hs: Handler*): Handler = hs.reduceLeft(tryHandler)
 
   def GET(r: Route): Middleware = ifMatches(HttpMethod.Get, r)
   def POST(r: Route): Middleware = ifMatches(HttpMethod.Post, r)
@@ -75,10 +102,10 @@ object Usher{
   def OPTIONS(r: Route): Middleware = ifMatches(HttpMethod.Options, r)
   def ANY(r: Route): Middleware = ifRoute(r)
 
+  def context(r: Route): Middleware = ifRoute(r)
+
   /** Helper for very simple 404 pages */
   def notFound(msg: String): Handler = handler { req => Response(status = 404, body = msg) }
-
-  def context(r: Route): Middleware = ifRoute(r)
 
   // Feature request from the marketing dept.
   // allows `GET("/a/:id") { req => ... }`

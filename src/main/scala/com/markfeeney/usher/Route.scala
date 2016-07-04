@@ -2,18 +2,15 @@ package com.markfeeney.usher
 
 /** Route matching mostly ported from clout: https://github.com/weavejester/clout */
 
-import com.markfeeney.circlet.Request
-
-import scala.language.implicitConversions
-import scala.collection.mutable.ListBuffer
-import scala.util.matching.Regex
 import com.markfeeney.usher.parser.RouteParser.{LiteralContext, ParamContext, RouteContext, WildcardContext}
 import com.markfeeney.usher.parser.{RouteBaseListener, RouteLexer, RouteParser}
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-import org.antlr.v4.runtime.{ANTLRInputStream, BaseErrorListener, CommonTokenStream, RecognitionException, Recognizer}
+import org.antlr.v4.runtime._
 
-import scala.util.Try
+import scala.collection.mutable.ListBuffer
+import scala.language.implicitConversions
+import scala.util.matching.Regex
 
 /**
  * Ideally you get one of these via `Route.compile()`.
@@ -24,21 +21,6 @@ import scala.util.Try
 case class Route(path: String, paramNames: Vector[String], regex: Regex)
 
 object Route {
-
-  sealed trait ParamValue {
-    def value: String
-  }
-  final case class Single(value: String) extends ParamValue
-  final case class Multiple(xs: Vector[String]) extends ParamValue {
-    assert(xs.nonEmpty, "Multiple must contain at least one value")
-    def value: String = xs.head
-  }
-  object ParamValue {
-    implicit def str2Single(s: String): Single = Single(s)
-    implicit def vec2Multiple(vec: Vector[String]): Multiple = Multiple(vec)
-  }
-
-  case class Params(params: Map[String, ParamValue])
 
   // Why'd I think ANTLR was a good idea again? http://stackoverflow.com/a/26573239/69689
   // This thing is used to make ANTLR throw a decent exception when it runs into trouble.
@@ -118,29 +100,18 @@ object Route {
     * @param url A candidate URL like "/foo/42/blah/bar/9000"
     * @return Map of values extracted from `url`, or None if url doesn't match route.
     */
-  def parse(route: Route, url: String): Option[Map[String, ParamValue]] = {
+  def parse(route: Route, url: String): Option[Map[String, Vector[String]]] = {
     route.regex.findFirstMatchIn(url).map { m =>
       route.paramNames
         .zipWithIndex
         .map { case (param, i) => param -> m.group(i + 1) }
-        .foldLeft(Map[String, ParamValue]()) { case (acc, (k, v)) =>
+        .foldLeft(Map[String, Vector[String]]()) { case (acc, (k, v)) =>
           acc.get(k) match {
-            case Some(Single(oldV)) => acc.updated(k, Vector(oldV, v))
-            case Some(Multiple(vs)) => acc.updated(k, vs :+ v)
-            case _ => acc.updated(k, v)
+            case Some(vs) => acc.updated(k, vs :+ v)
+            case None => acc.updated(k, Vector(v))
           }
         }
     }
-  }
-
-  /** Return parsed route params stored on `req`, if any. */
-  def get(req: Request): Option[Params] = {
-    Try(req.attrs("routeParams").asInstanceOf[Params]).toOption
-  }
-
-  /** Set `params` to be the route params on `req`. */
-  def set(req: Request, params: Params): Request = {
-    req.updated("routeParams", params)
   }
 
   implicit def str2Route(routeSpec: String): Route = Route.compile(routeSpec)
