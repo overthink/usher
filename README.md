@@ -21,7 +21,13 @@ See the full [example app](https://github.com/overthink/usher-example).
 
 ## Try it
 
-No snapshots yet -- soon!  Clone and `sbt publishLocal` if desperate, which seems unlikely.
+```scala
+resolvers += Opts.resolver.sonatypeSnapshots
+libraryDependencies ++= Seq(
+  "com.markfeeney" % "usher_2.11" % "0.1.0-SNAPSHOT"
+)
+```
+
 
 ## Project Goals
 
