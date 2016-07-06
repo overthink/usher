@@ -21,13 +21,22 @@ See the full [example app](https://github.com/overthink/usher-example).
 
 ## Try it
 
+Latest release:
+
 ```scala
-resolvers += Opts.resolver.sonatypeSnapshots
 libraryDependencies ++= Seq(
-  "com.markfeeney" % "usher_2.11" % "0.1.0-SNAPSHOT"
+  "com.markfeeney" % "usher_2.11" % "0.1.0"
 )
 ```
 
+Next version snapshots:
+
+```scala
+resolvers += Opts.resolver.sonatypeSnapshots
+libraryDependencies ++= Seq(
+  "com.markfeeney" % "usher_2.11" % "0.2.0-SNAPSHOT"
+)
+```
 
 ## Project Goals
 
@@ -36,6 +45,7 @@ In priority order:
 1. Composable routes
 1. Maintainable code
 1. Type safe
+1. Fast enough
 
 ## TODO
 
