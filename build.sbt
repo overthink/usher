@@ -1,5 +1,5 @@
 name := "usher"
-version := "0.1.0"
+version := "0.2.0-SNAPSHOT"
 organization := "com.markfeeney"
 scalaVersion := "2.11.8"
 scalacOptions ++= Seq(
