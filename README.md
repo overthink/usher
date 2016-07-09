@@ -50,7 +50,9 @@ In priority order:
 ## TODO
 
 * regex constraints on route params, e.g. something like `/foo/:id{\\d+}`
+* `context` for nesting routes a la Compojure - https://github.com/weavejester/compojure/wiki/Nesting-routes
 * fancy type safe routes idea
+* middleware to automatically generate [Allow header](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.7) (?)
 
 ## License
 

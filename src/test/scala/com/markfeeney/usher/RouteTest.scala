@@ -38,7 +38,7 @@ class RouteTest extends FunSuite {
     assert(t("/foo/*/bar/:id/*/:id2/b") == Vector("*", "id", "*", "id2"))
     assert(t("/:x/:x/:y/:x") == Vector("x", "x", "y", "x"))
     assert(t("/foo/:x.y") == Vector("x.y"))
-    assert(t("/:ä/:ش") == Vector("ä", "ش"))
+    assert(t("/:ä/:æ") == Vector("ä", "æ"), "Supports Latin-1 supplement in param names")
     assert(t("/foo%20bar/:baz") == Vector("baz"))
   }
 
@@ -58,6 +58,21 @@ class RouteTest extends FunSuite {
       assert(t("/:x/:x", "/foo/bar") == m("x" -> Vector("foo", "bar")))
       assert(t("/:x/:x/foo/:y/42", "/a/b/foo/c/42") == m("x" -> Vector("a", "b"), "y" -> "c"))
     }
+  }
+
+  test("inline regular expressions routes") {
+    def t(path: String, url: String) = Route.parse(Route.compile(path), url)
+    assert(t("/foo/:id{\\d+}", "/foo/42").contains(Map("id" -> Vector("42"))))
+    assert(t("/foo/:id{\\d+}", "/foo/bar").isEmpty)
+    assert(t("/foo/:id{ba*r}", "/foo/bar").contains(Map("id" -> Vector("bar"))))
+    assert(t("/foo/:id{ba*r}", "/foo/baaaaar").contains(Map("id" -> Vector("baaaaar"))))
+    assert(t("/foo/:id{ba*r}", "/foo/quux").isEmpty)
+    assert(t("/:id{[abc]}", "/a").contains(Map("id" -> Vector("a"))))
+    assert(t("/:id{[abc]}", "/d").isEmpty)
+    assert(t("/:id{fo?}", "/f").contains(Map("id" -> Vector("f"))))
+    assert(t("/:id{fo?}", "/fo").contains(Map("id" -> Vector("fo"))))
+    assert(t("/:id{fo.}", "/fox").contains(Map("id" -> Vector("fox"))))
+    assert(t("/:id{fo.}", "/fo").isEmpty)
   }
 
 }
