@@ -73,6 +73,29 @@ class RouteTest extends FunSuite {
     assert(t("/:id{fo?}", "/fo").contains(Map("id" -> Vector("fo"))))
     assert(t("/:id{fo.}", "/fox").contains(Map("id" -> Vector("fox"))))
     assert(t("/:id{fo.}", "/fo").isEmpty)
+    withClue("alternates work") {
+      assert(t("/blah/:id{all|[1-9]\\d+}", "/blah/one").isEmpty)
+      assert(t("/blah/:id{all|[1-9]\\d+}", "/blah/all").contains(Map("id" -> Vector("all"))))
+      assert(t("/blah/:id{all|[1-9]\\d+}", "/blah/42").contains(Map("id" -> Vector("42"))))
+    }
+  }
+
+  test("nested braces in regex work") {
+    def t(path: String, url: String) = Route.parse(Route.compile(path), url)
+    assert(t("/blah/:id{\\d{3,5}}", "/blah/9000").contains(Map("id" -> Vector("9000"))))
+    assert(t("/blah/:id{\\d{3,5}}", "/blah/42").isEmpty)
+  }
+
+  test("empty regex works, matches empty string") {
+    def t(path: String, url: String) = Route.parse(Route.compile(path), url)
+    assert(t("/blah/:id{}", "/blah/42").isEmpty)
+    assert(t("/blah/:id{}", "/blah/").contains(Map("id" -> Vector(""))))
+  }
+
+  test("route matches against raw URI") {
+    def t(path: String, url: String) = Route.parse(Route.compile(path), url)
+    // ignore... should this be allowed to work?
+    assert(t("/blah/:name{. .}", "/blah/a%20b").isEmpty)
   }
 
 }

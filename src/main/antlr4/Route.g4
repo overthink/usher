@@ -41,13 +41,13 @@ fragment PctEnc
   : '%' Hex Hex
   ;
 
-// Woefully incomplete, no unicode, but good enough for simple useful cases like \d+
-fragment ReChar
-  : [\\a-zA-Z0-9+*.~\[\]()$^&?]+
+// consider: {\\d{5,10}}
+fragment ReChars
+  : ~[{}]*? (LBrace ~[{}]*? RBrace)?
   ;
 
 InlineRe
-  : LBrace ReChar+ RBrace { setText(getText().substring(1, getText().length() - 1)); } // trim braces
+  : LBrace ReChars RBrace { setText(getText().substring(1, getText().length() - 1)); } // trim braces
   ;
 
 // via Java8 grammar https://github.com/antlr/grammars-v4/blob/5315a661fe0e18164ae69335c2acba13288ec910/java8/Java8.g4#L1749
