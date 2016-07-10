@@ -38,7 +38,7 @@ class RouteTest extends FunSuite {
     assert(t("/foo/*/bar/:id/*/:id2/b") == Vector("*", "id", "*", "id2"))
     assert(t("/:x/:x/:y/:x") == Vector("x", "x", "y", "x"))
     assert(t("/foo/:x.y") == Vector("x.y"))
-    assert(t("/:ä/:æ") == Vector("ä", "æ"), "Supports Latin-1 supplement in param names")
+    assert(t("/:ä/:ユニコード") == Vector("ä", "ユニコード"), "Supports unicode param names")
     assert(t("/foo%20bar/:baz") == Vector("baz"))
   }
 

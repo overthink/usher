@@ -56,7 +56,8 @@ object Route {
   private def paramNames(parseTree: RouteContext): Vector[String] = {
     val params: ListBuffer[String] = ListBuffer.empty
     val listener = new RouteBaseListener {
-      override def enterParam(ctx: ParamContext): Unit = params.append(ctx.PARAM.getText)
+      override def enterParam(ctx: ParamContext): Unit = params.append(ctx.Param.getText)
+
       override def enterWildcard(ctx: WildcardContext): Unit = params.append(ctx.getText)
     }
     ParseTreeWalker.DEFAULT.walk(listener, parseTree)
@@ -68,11 +69,11 @@ object Route {
   private def buildRegex(parseTree: RouteContext): Regex = {
     val str = new StringBuilder("^")
     val listener = new RouteBaseListener {
-      override def enterLiteral(ctx: LiteralContext): Unit = str.append(ctx.PATH_FRAGMENT)
+      override def enterLiteral(ctx: LiteralContext): Unit = str.append(ctx.PathFragment)
       override def enterParam(ctx: ParamContext): Unit = {
         Option(ctx.inlineRegex()) match {
           case None => str.append("([^/?]+)")
-          case Some(inlineRegex) => str.append(s"(${inlineRegex.INLINE_RE.getText})")
+          case Some(inlineRegex) => str.append(s"(${inlineRegex.InlineRe.getText})")
         }
       }
       override def enterWildcard(ctx: WildcardContext): Unit = str.append("(.*?)")

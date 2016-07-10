@@ -9,56 +9,73 @@ route
   ;
 
 literal
-  : PATH_FRAGMENT
+  : PathFragment
   ;
 
 inlineRegex
-  : '{' INLINE_RE '}'
+  : InlineRe
   ;
 
 param
-  : PARAM inlineRegex?
+  : Param inlineRegex?
   ;
 
 wildcard
-  : '*'
+  : Star
   ;
 
 // --------------------------------------------------------------------------
 // Lexer rules (start with uppercase)
 // --------------------------------------------------------------------------
 
-fragment HEX
+Colon:  ':';
+Star:   '*';
+LBrace: '{';
+RBrace: '}';
+
+fragment Hex
   : [a-fA-F0-9]
   ;
 
-fragment PCT_ENC
-  : '%' HEX HEX
+fragment PctEnc
+  : '%' Hex Hex
   ;
 
 // Woefully incomplete, no unicode, but good enough for simple useful cases like \d+
-INLINE_RE
+fragment ReChar
   : [\\a-zA-Z0-9+*.~\[\]()$^&?]+
+  ;
+
+InlineRe
+  : LBrace ReChar+ RBrace { setText(getText().substring(1, getText().length() - 1)); } // trim braces
+  ;
+
+// via Java8 grammar https://github.com/antlr/grammars-v4/blob/5315a661fe0e18164ae69335c2acba13288ec910/java8/Java8.g4#L1749
+fragment IdLetterOrDigit
+  : [a-zA-Z0-9_.-] // these are the "java letters or digits" below 0x7F
+  | // covers all characters above 0x7F which are not a surrogate
+    ~[\u0000-\u007F\uD800-\uDBFF]
+    {Character.isJavaIdentifierPart(_input.LA(-1))}?
+  | // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+    [\uD800-\uDBFF] [\uDC00-\uDFFF]
+    {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
+  ;
+
+Identifier
+  : IdLetterOrDigit+
   ;
 
 // Allowed in URL path component (after domain, before query). Vaguely based
 // on RFC-3986, definitely not correct, but good enough.
-PATH_FRAGMENT
-  : ([a-zA-Z0-9-._~/] | PCT_ENC)+
+fragment PathChar
+  : [a-zA-Z0-9-._~/]
+  | PctEnc
   ;
 
-fragment LATIN1_SUPP
-  : '\u00A0' .. '\u00FF'
+PathFragment
+  : PathChar+
   ;
 
-// Arbitrarily support some high ASCII chars.  I'd like to support all
-// printable, non-whitespace unicode, but I haven't figured out how to do that
-// yet.
-IDENTIFIER
-  : ([a-zA-Z0-9-_.] | LATIN1_SUPP)+
-  ;
-
-// TODO: pretty sure this shouldn't be a lexer rule
-PARAM
-  : ':' IDENTIFIER { setText(getText().substring(1)); } // trim leading ':'
+Param
+  : Colon Identifier { setText(getText().substring(1)); } // trim leading ':'
   ;
