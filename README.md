@@ -27,7 +27,7 @@ Latest release:
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.markfeeney" % "usher_2.11" % "0.2.0"
+  "com.markfeeney" % "usher_2.11" % "0.2.1"
 )
 ```
 
