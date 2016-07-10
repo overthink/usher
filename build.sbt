@@ -10,9 +10,8 @@ scalacOptions ++= Seq(
   "-Xlint",
   "-Ywarn-unused-import"
 )
-resolvers += Resolver.sonatypeRepo("snapshots")
 libraryDependencies ++= Seq(
-  "com.markfeeney" % "circlet_2.11" % "0.1.0-SNAPSHOT",
+  "com.markfeeney" % "circlet_2.11" % "0.1.0",
   "org.scalatest" % "scalatest_2.11" % "2.2.6" % "test"
 )
 

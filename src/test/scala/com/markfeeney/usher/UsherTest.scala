@@ -69,8 +69,4 @@ class UsherTest extends FunSuite {
     h(Request.mock(HM.Post, "/foo/42"))(assertNoResp)
   }
 
-  ignore("building routes with context") {
-
-  }
-
 }
